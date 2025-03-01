@@ -43,7 +43,7 @@ module.exports = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        primary: "#36af57",
+        primary: "#2dd4bf", // Changed from #36af57 to a turquoise color
         secondary: "#555555",
         tertiary: "#cccccc",
         "dark-bg": "#2a2a2a",

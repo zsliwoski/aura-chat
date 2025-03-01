@@ -9,9 +9,7 @@ ARG GOFLAGS="'-ldflags=-w -s'"
 ENV CGO_ENABLED=1
 
 RUN --mount=type=cache,target=/root/.cache/go-build \
-    go build -trimpath -buildmode=pie -o /bin/chat-websockets/server ./cmd/server/main.go
-RUN --mount=type=cache,target=/root/.cache/go-build \
-    go build -trimpath -buildmode=pie -o /bin/chat-websockets/client ./cmd/client/main.go
+    go build -trimpath -buildmode=pie -o /bin/chat-websockets ./cmd/main.go
 
 # AI server image
 FROM ollama/ollama:0.5.12
@@ -19,6 +17,8 @@ COPY --from=build /bin/chat-websockets /bin/chat-websockets
 # Moving server files
 COPY setup.sh /setup.sh
 RUN chmod +x /setup.sh
+
+ENV INFERENCER_IMAGE="deepseek-r1:1.5b"
 
 EXPOSE 11434
 ENTRYPOINT [ "/setup.sh" ]

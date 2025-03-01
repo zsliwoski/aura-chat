@@ -1,6 +1,7 @@
 package main
 
 import (
+	"chat-websockets/lib/utils"
 	"fmt"
 	"log"
 	"net/http"
@@ -50,14 +51,9 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	http.HandleFunc("/ws", handleWebSocket)
+	http.HandleFunc("/api/chat", handleWebSocket)
 
-	// Serve a simple client for testing
-	// http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-	// 	http.ServeFile(w, r, "client.html")
-	// })
-
-	port := ":8080"
+	port := ":" + utils.GetEnv("WEBSOCKET_PORT", "8080")
 	fmt.Printf("WebSocket server starting on %s\n", port)
 	log.Fatal(http.ListenAndServe(port, nil))
 }

@@ -5,8 +5,9 @@ ollama serve &
 sleep 5
 
 echo "Pulling Deepseek image..."
-ollama pull deepseek-r1:1.5b
+ollama pull "${INFERENCER_IMAGE}"
+ollama run "${INFERENCER_IMAGE}" &
 
-echo "Starting Websocket server..."
-go run websocket-server &
-ollama run deepseek-r1:1.5b "tell me the basics of quantum mechanics"
+# start the chat server
+echo "Starting chat server..."
+/bin/chat-websockets &
