@@ -1,3 +1,11 @@
+export type Conversation = {
+    id: string
+    title: string
+    messages: Message[]
+    createdAt: Date
+    updatedAt: Date
+}
+
 export type Message = {
     id: string
     content: string

@@ -24,3 +24,25 @@ export function exportConversation(messages: Message[]) {
   URL.revokeObjectURL(url)
 }
 
+export function generateConversationTitle(messages: Message[]): string {
+  const firstUserMessage = messages.find((m) => m.role === "user")
+  if (!firstUserMessage) return "New Chat"
+
+  // Use the first ~30 characters of the first user message
+  return firstUserMessage.content.slice(0, 30) + (firstUserMessage.content.length > 30 ? "..." : "")
+}
+
+export function formatDate(date: Date): string {
+  const now = new Date()
+  const yesterday = new Date(now)
+  yesterday.setDate(yesterday.getDate() - 1)
+
+  if (date.toDateString() === now.toDateString()) {
+    return "Today"
+  } else if (date.toDateString() === yesterday.toDateString()) {
+    return "Yesterday"
+  } else {
+    return date.toLocaleDateString()
+  }
+}
+

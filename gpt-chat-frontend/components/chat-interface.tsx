@@ -5,18 +5,21 @@ import { useState, useRef, useEffect, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Avatar } from "@/components/ui/avatar"
-import { Sparkles, Send, Menu, Plus, User, Settings, LogOut, Download } from "lucide-react"
+import { Sparkles, Send, Menu, Plus, User, Settings, LogOut, Download, Copy } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { SettingsDialog } from "@/components/settings-dialog"
 import { ConnectionStatus } from "@/components/connection-status"
 import { useWebSocket } from "@/lib/use-websocket"
-import { CopyButton } from "@/components/copy-button"
 import { exportConversation } from "@/lib/utils"
 import ReactMarkdown from "react-markdown"
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter"
 import { oneDark } from "react-syntax-highlighter/dist/cjs/styles/prism"
+import { oneLight } from "react-syntax-highlighter/dist/cjs/styles/prism"
 import remarkGfm from "remark-gfm"
+import { useTheme } from "next-themes"
+import type { Conversation } from "@/types/chat"
+import { generateConversationTitle, formatDate } from "@/lib/utils"
 
 type Message = {
   id: string
@@ -78,12 +81,19 @@ export default function ChatInterface() {
     return shuffled.slice(0, 5)
   }, [])
 
+  const { theme } = useTheme()
+
+  const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null)
+
+  const [conversations, setConversations] = useState<Conversation[]>([])
+  const [currentConversationId, setCurrentConversationId] = useState<string | null>(null)
+
   useEffect(() => {
     addMessageListener((message) => {
       if (message.type === "message") {
         // NOTE: temporary workaround to remove <think> tags from response
         // Once streaming is added this will turn into something more useful
-        const content = message.data.message.content.replace(/<think>.*?<\/think>/g, '');
+        const content = message.data.message.content.replace(/<think>.*?<\/think>/, '');
         const assistantMessage: Message = {
           id: Date.now().toString(),
           content: content,
@@ -114,6 +124,55 @@ export default function ChatInterface() {
     }
     setInputError(null)
     return true
+  }
+
+  const createNewChat = () => {
+    // Save current conversation if it exists and has messages
+    if (currentConversationId && messages.length > 1) {
+      const currentConversation = conversations.find((c) => c.id === currentConversationId)
+      if (currentConversation) {
+        setConversations((prev) =>
+          prev.map((c) => (c.id === currentConversationId ? { ...c, messages, updatedAt: new Date() } : c)),
+        )
+      } else {
+        const newConversation: Conversation = {
+          id: currentConversationId,
+          title: generateConversationTitle(messages),
+          messages,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        }
+        setConversations((prev) => [...prev, newConversation])
+      }
+    }
+
+    // Start new conversation
+    const newId = Date.now().toString()
+    setCurrentConversationId(newId)
+    setMessages([
+      {
+        id: "1",
+        content: "Hello! How can I help you today?",
+        role: "assistant",
+        timestamp: new Date(),
+      },
+    ])
+    setShowSuggestions(true)
+    if (window.innerWidth < 768) {
+      setSidebarOpen(false)
+    }
+  }
+
+  const loadConversation = (conversationId: string) => {
+    const conversation = conversations.find((c) => c.id === conversationId)
+    if (conversation) {
+      setCurrentConversationId(conversationId)
+      setMessages(conversation.messages)
+      setShowSuggestions(false)
+      if (window.innerWidth < 768) {
+        setSidebarOpen(false)
+      }
+    }
   }
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -181,15 +240,36 @@ export default function ChatInterface() {
             code({ node, inline, className, children, ...props }) {
               const match = /language-(\w+)/.exec(className || "")
               return !inline && match ? (
-                <SyntaxHighlighter
-                  {...props}
-                  style={oneDark}
-                  language={match[1]}
-                  PreTag="div"
-                  className="rounded-md !bg-secondary/10 !p-4 !my-4"
-                >
-                  {String(children).replace(/\n$/, "")}
-                </SyntaxHighlighter>
+                <div className="relative">
+                  <SyntaxHighlighter
+                    {...props}
+                    style={theme === "dark" ? oneDark : oneLight}
+                    language={match[1]}
+                    PreTag="div"
+                    className="rounded-md !bg-secondary/10 !p-4 !my-4"
+                  >
+                    {String(children).replace(/\n$/, "")}
+                  </SyntaxHighlighter>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-all duration-200"
+                    onClick={() => {
+                      const blob = new Blob([String(children)], { type: "text/plain" })
+                      const url = URL.createObjectURL(blob)
+                      const a = document.createElement("a")
+                      a.href = url
+                      a.download = `snippet.${match[1]}`
+                      document.body.appendChild(a)
+                      a.click()
+                      document.body.removeChild(a)
+                      URL.revokeObjectURL(url)
+                    }}
+                  >
+                    <Download className="h-4 w-4" />
+                    <span className="sr-only">Download code</span>
+                  </Button>
+                </div>
               ) : (
                 <code {...props} className={cn("rounded-md bg-secondary/10 px-1.5 py-0.5", className)}>
                   {children}
@@ -283,6 +363,51 @@ export default function ChatInterface() {
     }
   }, [])
 
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" })
+    }
+  }, [])
+
+  const copyToClipboard = (text: string, messageId: string) => {
+    navigator.clipboard.writeText(text)
+    setCopiedMessageId(messageId)
+    setTimeout(() => setCopiedMessageId(null), 2000)
+  }
+
+  const renderConversations = () => {
+    const groupedConversations = conversations.reduce(
+      (acc, conversation) => {
+        const dateGroup = formatDate(conversation.createdAt)
+        if (!acc[dateGroup]) {
+          acc[dateGroup] = []
+        }
+        acc[dateGroup].push(conversation)
+        return acc
+      },
+      {} as Record<string, Conversation[]>,
+    )
+
+    return Object.entries(groupedConversations).map(([dateGroup, groupConversations]) => (
+      <div key={dateGroup}>
+        <div className="mb-2 px-2 text-xs font-medium text-secondary/60 dark:text-tertiary/60">{dateGroup}</div>
+        {groupConversations.map((conversation) => (
+          <Button
+            key={conversation.id}
+            variant="ghost"
+            className={cn(
+              "mb-1 w-full justify-start truncate text-left text-secondary dark:text-tertiary hover:bg-primary/10 transition-all duration-200 hover:translate-x-1",
+              currentConversationId === conversation.id && "bg-primary/10",
+            )}
+            onClick={() => loadConversation(conversation.id)}
+          >
+            {conversation.title}
+          </Button>
+        ))}
+      </div>
+    ))
+  }
+
   return (
     <div className="flex h-screen bg-tertiary/20 dark:bg-dark-bg transition-colors duration-300">
       {sidebarOpen && (
@@ -302,62 +427,17 @@ export default function ChatInterface() {
         <div className="flex h-full flex-col">
           {/* New Chat Button */}
           <div className="p-4">
-            <Button className="w-full justify-start gap-2 bg-primary text-primary-foreground hover:bg-primary/90 transition-all duration-300 hover:scale-[1.02]">
+            <Button
+              className="w-full justify-start gap-2 bg-primary text-primary-foreground hover:bg-primary/90 transition-all duration-300 hover:scale-[1.02]"
+              onClick={createNewChat}
+            >
               <Plus size={16} />
               New Chat
             </Button>
           </div>
 
           {/* Chat History */}
-          <div className="flex-1 overflow-y-auto p-2">
-            <div className="mb-2 px-2 text-xs font-medium text-secondary/60 dark:text-tertiary/60">Today</div>
-            <Button
-              variant="ghost"
-              className="mb-1 w-full justify-start truncate text-left text-secondary dark:text-tertiary hover:bg-primary/10 transition-all duration-200 hover:translate-x-1"
-              onClick={() => {
-                if (window.innerWidth < 768) {
-                  setSidebarOpen(false)
-                }
-              }}
-            >
-              Understanding quantum computing
-            </Button>
-            <Button
-              variant="ghost"
-              className="mb-1 w-full justify-start truncate text-left text-secondary dark:text-tertiary hover:bg-primary/10 transition-all duration-200 hover:translate-x-1"
-              onClick={() => {
-                if (window.innerWidth < 768) {
-                  setSidebarOpen(false)
-                }
-              }}
-            >
-              Creative writing prompts
-            </Button>
-
-            <div className="mb-2 mt-4 px-2 text-xs font-medium text-secondary/60 dark:text-tertiary/60">Yesterday</div>
-            <Button
-              variant="ghost"
-              className="mb-1 w-full justify-start truncate text-left text-secondary dark:text-tertiary hover:bg-primary/10 transition-all duration-200 hover:translate-x-1"
-              onClick={() => {
-                if (window.innerWidth < 768) {
-                  setSidebarOpen(false)
-                }
-              }}
-            >
-              Python code examples
-            </Button>
-            <Button
-              variant="ghost"
-              className="mb-1 w-full justify-start truncate text-left text-secondary dark:text-tertiary hover:bg-primary/10 transition-all duration-200 hover:translate-x-1"
-              onClick={() => {
-                if (window.innerWidth < 768) {
-                  setSidebarOpen(false)
-                }
-              }}
-            >
-              Travel recommendations
-            </Button>
-          </div>
+          <div className="flex-1 overflow-y-auto p-2">{renderConversations()}</div>
 
           {/* User Section */}
           <div className="border-t border-tertiary dark:border-secondary/20 p-4">
@@ -436,30 +516,58 @@ export default function ChatInterface() {
             {messages.map((message, index) => (
               <div
                 key={message.id}
-                className={cn("mb-6 flex", message.role === "user" ? "justify-end" : "justify-start")}
+                className={cn("mb-6 flex flex-col group", message.role === "user" ? "items-end" : "items-start")}
               >
                 <div
                   className={cn(
-                    "max-w-[85%] md:max-w-[75%] rounded-lg p-4 shadow-md transition-shadow duration-300 hover:shadow-lg active:scale-[0.98] cursor-pointer animate-fade-in group relative",
+                    "max-w-[85%] md:max-w-[75%] rounded-lg p-4 shadow-md transition-shadow duration-300 hover:shadow-lg animate-fade-in group relative select-text",
                     message.role === "user"
-                      ? "bg-primary text-primary-foreground active:bg-primary/95"
-                      : "bg-light-bg dark:bg-muted-dark text-secondary dark:text-tertiary active:bg-tertiary/10 dark:active:bg-muted-dark/90",
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-light-bg dark:bg-muted-dark text-secondary dark:text-tertiary",
                     "after:absolute after:inset-0 after:rounded-lg after:transition-[transform,opacity] after:duration-500 hover:after:scale-[1.02] hover:after:opacity-0 after:opacity-100 after:bg-white/5 relative overflow-hidden",
                   )}
                   style={{ animationDelay: `${index * 50}ms` }}
-                  onClick={() => {
-                    const ripple = document.createElement("div")
-                    ripple.className = "absolute inset-0 bg-white/20 animate-ripple rounded-lg"
-                    const target = event?.currentTarget as HTMLElement
-                    target.appendChild(ripple)
-                    setTimeout(() => ripple.remove(), 1000)
-                  }}
                 >
-                  {message.role === "assistant" && <CopyButton text={message.content} />}
                   {renderMessageContent(message)}
                 </div>
+                {message.role === "assistant" && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => copyToClipboard(message.content, message.id)}
+                    className={cn(
+                      "mt-2 text-xs text-secondary/60 dark:text-tertiary/60 hover:text-primary opacity-0 group-hover:opacity-100 transition-all duration-200",
+                      "active:scale-95",
+                      copiedMessageId === message.id && "text-primary",
+                    )}
+                  >
+                    <Copy className="h-3 w-3 mr-1" />
+                    {copiedMessageId === message.id ? "Copied!" : "Copy response"}
+                  </Button>
+                )}
               </div>
             ))}
+
+            {isLoading && (
+              <div className="mb-6 flex items-start">
+                <div className="max-w-[85%] md:max-w-[75%] rounded-lg p-4 shadow-md bg-light-bg dark:bg-muted-dark animate-fade-in">
+                  <div className="flex space-x-2">
+                    <div
+                      className="h-3 w-3 animate-bounce rounded-full bg-primary"
+                      style={{ animationDelay: "0ms" }}
+                    ></div>
+                    <div
+                      className="h-3 w-3 animate-bounce rounded-full bg-primary"
+                      style={{ animationDelay: "150ms" }}
+                    ></div>
+                    <div
+                      className="h-3 w-3 animate-bounce rounded-full bg-primary"
+                      style={{ animationDelay: "300ms" }}
+                    ></div>
+                  </div>
+                </div>
+              </div>
+            )}
             <div ref={messagesEndRef} />
           </div>
         </div>
@@ -473,11 +581,7 @@ export default function ChatInterface() {
                   <button
                     key={suggestion}
                     type="button"
-                    onClick={() => {
-                      setInput(suggestion)
-                      const fakeEvent = { preventDefault: () => { } } as React.FormEvent
-                      handleSubmit(fakeEvent)
-                    }}
+                    onClick={() => setInput(suggestion)}
                     className={cn(
                       "px-3 py-1.5 text-sm rounded-full border border-tertiary/50 dark:border-secondary/30",
                       "bg-light-bg dark:bg-dark-bg text-secondary/70 dark:text-tertiary/70",
