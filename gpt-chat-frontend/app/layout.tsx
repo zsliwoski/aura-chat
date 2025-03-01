@@ -1,5 +1,8 @@
 import type { Metadata } from 'next'
 import './globals.css'
+import SessionProvider from "../components/session-provider";
+import { getServerSession } from 'next-auth'
+import { authOptions } from "./api/auth/[...nextauth]/route";
 
 export const metadata: Metadata = {
   title: 'AuraChat',
@@ -7,14 +10,19 @@ export const metadata: Metadata = {
   generator: 'Next.js',
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  const session = await getServerSession(authOptions);
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <SessionProvider session={session}>
+          {children}
+        </SessionProvider>
+      </body>
     </html>
   )
 }

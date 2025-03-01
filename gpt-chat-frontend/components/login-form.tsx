@@ -9,11 +9,8 @@ import { ThemeToggle } from "@/components/theme-toggle"
 import { signIn } from "next-auth/react"
 import Image from "next/image"
 
-interface LoginFormProps {
-  onLogin: (email: string, password: string) => void
-}
 
-export default function LoginForm({ onLogin }: LoginFormProps) {
+export default function LoginForm() {
   const [isHovering, setIsHovering] = useState(false)
 
   const handleSocialLogin = (provider: string) => {

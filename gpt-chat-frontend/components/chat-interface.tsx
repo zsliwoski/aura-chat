@@ -81,13 +81,16 @@ export default function ChatInterface() {
   useEffect(() => {
     addMessageListener((message) => {
       if (message.type === "message") {
+        // NOTE: temporary workaround to remove <think> tags from response
+        // Once streaming is added this will turn into something more useful
+        const content = message.data.message.content.replace(/<think>.*?<\/think>/g, '');
         const assistantMessage: Message = {
           id: Date.now().toString(),
-          content: message.data.message.content,
+          content: content,
           role: "assistant",
           timestamp: new Date(),
         }
-        setMessages((prev) => [...prev, message.data])
+        setMessages((prev) => [...prev, assistantMessage])
         setIsLoading(false)
       }
     })
