@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState, useRef, useEffect } from "react"
+import { useState, useRef, useEffect, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Avatar } from "@/components/ui/avatar"
@@ -26,15 +26,30 @@ type Message = {
   isTyping?: boolean
 }
 
-const suggestions = [
+const allSuggestions = [
   "Tell me a joke",
   "Explain quantum computing",
   "Write a poem",
   "Help me debug my code",
   "Translate to Spanish",
+  "What's the meaning of life?",
+  "How do I learn React?",
+  "Write a story",
+  "Explain blockchain",
+  "Give me a recipe",
+  "Solve a math problem",
+  "Create a workout plan",
+  "Design tips",
+  "Career advice",
+  "Book recommendations",
+  "Movie suggestions",
+  "Travel planning help",
+  "Gardening tips",
+  "Music theory basics",
+  "Photography advice",
 ]
 
-const WEBSOCKET_URL = process.env.CHAT_WEBSOCKET_URL || "ws://localhost:3000/api/chat"
+const WEBSOCKET_URL = process.env.NEXT_PUBLIC_WEBSOCKET_URL || "ws://localhost:8080/api/chat"
 
 export default function ChatInterface() {
   const [input, setInput] = useState("")
@@ -51,20 +66,66 @@ export default function ChatInterface() {
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const [showSettings, setShowSettings] = useState(false)
 
+  // Add input validation state
+  const [inputError, setInputError] = useState<string | null>(null)
+  const chatContainerRef = useRef<HTMLDivElement>(null)
+
   const { isConnected, isReconnecting, error, sendMessage, addMessageListener } = useWebSocket(WEBSOCKET_URL)
+
+  const [showSuggestions, setShowSuggestions] = useState(true)
+  const suggestions = useMemo(() => {
+    const shuffled = [...allSuggestions].sort(() => 0.5 - Math.random())
+    return shuffled.slice(0, 5)
+  }, [])
 
   useEffect(() => {
     addMessageListener((message) => {
       if (message.type === "message") {
+        const assistantMessage: Message = {
+          id: Date.now().toString(),
+          content: message.data.message.content,
+          role: "assistant",
+          timestamp: new Date(),
+        }
         setMessages((prev) => [...prev, message.data])
         setIsLoading(false)
       }
     })
   }, [addMessageListener])
 
+  // Validate input before submission
+  const validateInput = (text: string) => {
+    if (text.trim().length === 0) {
+      setInputError("Message cannot be empty")
+      return false
+    }
+    if (text.length > 2000) {
+      setInputError("Message is too long (maximum 2000 characters)")
+      return false
+    }
+    // Check for spam-like behavior (repeated characters)
+    const repeatedCharsRegex = /(.)\1{9,}/
+    if (repeatedCharsRegex.test(text)) {
+      setInputError("Message contains too many repeated characters")
+      return false
+    }
+    setInputError(null)
+    return true
+  }
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!input.trim() || isLoading || !isConnected) return
+    if (!isConnected) {
+      setInputError("Not connected to server")
+      return
+    }
+    if (isLoading) {
+      setInputError("Please wait for the previous message to complete")
+      return
+    }
+    if (!validateInput(input)) {
+      return
+    }
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -73,10 +134,10 @@ export default function ChatInterface() {
       timestamp: new Date(),
     }
     setMessages((prev) => [...prev, userMessage])
+    setShowSuggestions(false)
     setInput("")
     setIsLoading(true)
 
-    // Send message through WebSocket
     sendMessage({
       type: "message",
       data: {
@@ -191,6 +252,33 @@ export default function ChatInterface() {
       </div>
     )
   }
+
+  // Set up scroll observer
+  useEffect(() => {
+    if (!chatContainerRef.current) return
+
+    const container = chatContainerRef.current
+    const observer = new MutationObserver(() => {
+      const shouldAutoScroll = container.scrollTop + container.clientHeight >= container.scrollHeight - 100
+      if (shouldAutoScroll) {
+        container.scrollTop = container.scrollHeight
+      }
+    })
+
+    observer.observe(container, {
+      childList: true,
+      subtree: true,
+    })
+
+    return () => observer.disconnect()
+  }, [])
+
+  // Initial scroll to bottom
+  useEffect(() => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight
+    }
+  }, [])
 
   return (
     <div className="flex h-screen bg-tertiary/20 dark:bg-dark-bg transition-colors duration-300">
@@ -315,7 +403,7 @@ export default function ChatInterface() {
             </Button>
             <div className="flex items-center gap-2">
               <Sparkles className="h-5 w-5 text-primary animate-pulse" />
-              <span className="font-medium text-secondary dark:text-tertiary">AuraChat</span>
+              <span className="font-medium text-secondary dark:text-tertiary">ChatAI</span>
             </div>
           </div>
 
@@ -334,7 +422,7 @@ export default function ChatInterface() {
         </header>
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto p-4">
+        <div className="flex-1 overflow-y-auto p-4" ref={chatContainerRef}>
           <div className="mx-auto max-w-3xl">
             {error && (
               <div className="mb-4 rounded-lg bg-destructive/10 p-4 text-sm text-destructive">
@@ -349,7 +437,7 @@ export default function ChatInterface() {
               >
                 <div
                   className={cn(
-                    "max-w-[80%] rounded-lg p-4 shadow-md transition-shadow duration-300 hover:shadow-lg active:scale-[0.98] cursor-pointer animate-fade-in group relative",
+                    "max-w-[85%] md:max-w-[75%] rounded-lg p-4 shadow-md transition-shadow duration-300 hover:shadow-lg active:scale-[0.98] cursor-pointer animate-fade-in group relative",
                     message.role === "user"
                       ? "bg-primary text-primary-foreground active:bg-primary/95"
                       : "bg-light-bg dark:bg-muted-dark text-secondary dark:text-tertiary active:bg-tertiary/10 dark:active:bg-muted-dark/90",
@@ -376,31 +464,43 @@ export default function ChatInterface() {
         {/* Input */}
         <div className="border-t border-tertiary dark:border-secondary/20 bg-light-bg dark:bg-dark-bg p-4 transition-colors duration-300">
           <form onSubmit={handleSubmit} className="mx-auto max-w-3xl">
-            <div className="mb-4 flex flex-wrap gap-2 justify-center">
-              {suggestions.map((suggestion, index) => (
-                <button
-                  key={suggestion}
-                  type="button"
-                  onClick={() => setInput(suggestion)}
-                  className={cn(
-                    "px-3 py-1.5 text-sm rounded-full border border-tertiary/50 dark:border-secondary/30",
-                    "bg-light-bg dark:bg-dark-bg text-secondary/70 dark:text-tertiary/70",
-                    "hover:border-primary/50 hover:text-primary hover:scale-105",
-                    "transition-all duration-200 animate-fade-in",
-                  )}
-                  style={{ animationDelay: `${index * 50}ms` }}
-                >
-                  {suggestion}
-                </button>
-              ))}
-            </div>
+            {showSuggestions && (
+              <div className="mb-4 flex flex-wrap gap-2 justify-center">
+                {suggestions.map((suggestion, index) => (
+                  <button
+                    key={suggestion}
+                    type="button"
+                    onClick={() => {
+                      setInput(suggestion)
+                      const fakeEvent = { preventDefault: () => { } } as React.FormEvent
+                      handleSubmit(fakeEvent)
+                    }}
+                    className={cn(
+                      "px-3 py-1.5 text-sm rounded-full border border-tertiary/50 dark:border-secondary/30",
+                      "bg-light-bg dark:bg-dark-bg text-secondary/70 dark:text-tertiary/70",
+                      "hover:border-primary/50 hover:text-primary hover:scale-105",
+                      "transition-all duration-200 animate-fade-in",
+                    )}
+                    style={{ animationDelay: `${index * 50}ms` }}
+                  >
+                    {suggestion}
+                  </button>
+                ))}
+              </div>
+            )}
             <div className="relative">
               <Textarea
                 value={input}
-                onChange={(e) => setInput(e.target.value)}
-                placeholder={isConnected ? "Message AuraChat..." : "Connecting to server..."}
+                onChange={(e) => {
+                  setInput(e.target.value)
+                  if (inputError) validateInput(e.target.value)
+                }}
+                placeholder={isConnected ? "Message ChatAI..." : "Connecting to server..."}
                 disabled={!isConnected}
-                className="min-h-[60px] resize-none pr-12 border-tertiary bg-light-bg text-secondary focus:border-primary focus:ring-primary/20 dark:border-secondary/30 dark:bg-dark-bg dark:text-tertiary transition-all duration-200 focus:scale-[1.01]"
+                className={cn(
+                  "min-h-[60px] resize-none pr-12 border-tertiary bg-light-bg text-secondary focus:border-primary focus:ring-primary/20 dark:border-secondary/30 dark:bg-dark-bg dark:text-tertiary transition-all duration-200 focus:scale-[1.01]",
+                  inputError && "border-destructive focus:border-destructive focus:ring-destructive/20",
+                )}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && !e.shiftKey) {
                     e.preventDefault()
@@ -417,8 +517,9 @@ export default function ChatInterface() {
                 <Send size={18} />
               </Button>
             </div>
+            {inputError && <p className="mt-2 text-sm text-destructive">{inputError}</p>}
             <p className="mt-2 text-center text-xs text-secondary/60 dark:text-tertiary/60">
-              AuraChat can make mistakes. Consider checking important information.
+              ChatAI can make mistakes. Consider checking important information.
             </p>
           </form>
         </div>

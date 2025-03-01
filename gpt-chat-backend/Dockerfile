@@ -18,7 +18,7 @@ COPY --from=build /bin/chat-websockets /bin/chat-websockets
 COPY setup.sh /setup.sh
 RUN chmod +x /setup.sh
 
-ENV INFERENCER_IMAGE="deepseek-r1:1.5b"
+ENV INFERENCE_MODEL="deepseek-r1:1.5b"
 
-EXPOSE 11434
+EXPOSE 8080
 ENTRYPOINT [ "/setup.sh" ]

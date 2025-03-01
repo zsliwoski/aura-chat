@@ -1,27 +1,23 @@
 "use client"
 
-import type React from "react"
-
 import { useState } from "react"
+
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { MessageSquare } from "lucide-react"
 import { ThemeToggle } from "@/components/theme-toggle"
+import { signIn } from "next-auth/react"
+import Image from "next/image"
 
 interface LoginFormProps {
   onLogin: (email: string, password: string) => void
 }
 
 export default function LoginForm({ onLogin }: LoginFormProps) {
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
   const [isHovering, setIsHovering] = useState(false)
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    onLogin(email, password)
+  const handleSocialLogin = (provider: string) => {
+    signIn(provider, { callbackUrl: "/" })
   }
 
   return (
@@ -38,89 +34,69 @@ export default function LoginForm({ onLogin }: LoginFormProps) {
               onMouseLeave={() => setIsHovering(false)}
             >
               <MessageSquare
-                className={`h-8 w-8 text-primary transition-transform duration-300 ${isHovering ? "scale-110 rotate-12" : ""}`}
+                className={`h-8 w-8 text-primary transition-transform duration-300 ${isHovering ? "scale-110 rotate-12" : ""
+                  }`}
               />
             </div>
           </div>
-          <CardTitle className="text-2xl font-bold text-secondary dark:text-tertiary">Welcome back</CardTitle>
+          <CardTitle className="text-2xl font-bold text-secondary dark:text-tertiary">Welcome to AuraChat</CardTitle>
           <CardDescription className="text-secondary/70 dark:text-tertiary/70">
-            Enter your email and password to access your account
+            Sign in to start chatting with Aura
           </CardDescription>
         </CardHeader>
-        <form onSubmit={handleSubmit}>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email" className="text-secondary dark:text-tertiary">
-                Email
-              </Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="name@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="border-tertiary bg-light-bg text-secondary focus:border-primary focus:ring-primary/20 dark:border-secondary/30 dark:bg-dark-bg dark:text-tertiary transition-all duration-200 focus:scale-[1.01]"
-              />
+        <CardContent className="grid gap-4">
+          <Button
+            className="w-full bg-white hover:bg-gray-50 text-gray-900 border transition-all duration-200 hover:scale-[1.02]"
+            onClick={() => handleSocialLogin("google")}
+          >
+            <Image src="/google.svg" alt="Google" width={20} height={20} className="mr-2" />
+            Continue with Google
+          </Button>
+          <Button
+            className="w-full bg-[#24292F] hover:bg-[#24292F]/90 text-white transition-all duration-200 hover:scale-[1.02]"
+            onClick={() => handleSocialLogin("github")}
+          >
+            <Image src="/github.svg" alt="GitHub" width={20} height={20} className="mr-2" />
+            Continue with GitHub
+          </Button>
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t border-tertiary dark:border-secondary/20" />
             </div>
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="password" className="text-secondary dark:text-tertiary">
-                  Password
-                </Label>
-                <Button
-                  variant="link"
-                  className="h-auto p-0 text-sm text-primary hover:text-primary/80 transition-colors duration-200"
-                >
-                  Forgot password?
-                </Button>
-              </div>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                className="border-tertiary bg-light-bg text-secondary focus:border-primary focus:ring-primary/20 dark:border-secondary/30 dark:bg-dark-bg dark:text-tertiary transition-all duration-200 focus:scale-[1.01]"
-              />
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-light-bg dark:bg-dark-bg px-2 text-secondary/70 dark:text-tertiary/70">
+                Or continue with
+              </span>
             </div>
-          </CardContent>
-          <CardFooter className="flex flex-col space-y-2">
+          </div>
+          <Button
+            className="w-full bg-[#4267B2] hover:bg-[#4267B2]/90 text-white transition-all duration-200 hover:scale-[1.02]"
+            onClick={() => handleSocialLogin("facebook")}
+          >
+            <Image src="/facebook.svg" alt="Facebook" width={20} height={20} className="mr-2" />
+            Continue with Facebook
+          </Button>
+        </CardContent>
+        <CardFooter className="flex flex-col space-y-4">
+          <div className="text-xs text-center text-secondary/60 dark:text-tertiary/60">
+            By continuing, you agree to our{" "}
             <Button
-              type="submit"
-              className="w-full bg-primary text-primary-foreground hover:bg-primary/90 transition-all duration-300 hover:scale-105 shadow-md hover:shadow-primary/20"
+              variant="link"
+              className="h-auto p-0 text-primary hover:text-primary/80 text-xs transition-colors duration-200"
+              onClick={() => window.open("/privacy", "_blank")}
             >
-              Sign in
+              Privacy Policy
+            </Button>{" "}
+            and{" "}
+            <Button
+              variant="link"
+              className="h-auto p-0 text-primary hover:text-primary/80 text-xs transition-colors duration-200"
+              onClick={() => window.open("/terms", "_blank")}
+            >
+              Terms of Service
             </Button>
-            <div className="text-center text-sm text-secondary/70 dark:text-tertiary/70">
-              Don&apos;t have an account?{" "}
-              <Button
-                variant="link"
-                className="h-auto p-0 text-primary hover:text-primary/80 transition-colors duration-200"
-              >
-                Sign up
-              </Button>
-            </div>
-            <div className="mt-4 text-xs text-center text-secondary/60 dark:text-tertiary/60">
-              By signing in, you agree to our{" "}
-              <Button
-                variant="link"
-                className="h-auto p-0 text-primary hover:text-primary/80 text-xs transition-colors duration-200"
-                onClick={() => window.open("/privacy", "_blank")}
-              >
-                Privacy Policy
-              </Button>{" "}
-              and{" "}
-              <Button
-                variant="link"
-                className="h-auto p-0 text-primary hover:text-primary/80 text-xs transition-colors duration-200"
-                onClick={() => window.open("/terms", "_blank")}
-              >
-                Terms of Service
-              </Button>
-            </div>
-          </CardFooter>
-        </form>
+          </div>
+        </CardFooter>
       </Card>
     </div>
   )

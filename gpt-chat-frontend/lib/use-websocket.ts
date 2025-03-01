@@ -59,8 +59,8 @@ export function useWebSocket(url: string) {
     useEffect(() => {
         connect()
         return () => {
-            if (wsRef.current) {
-                wsRef.current.close()
+            if (wsRef?.current) {
+                //wsRef.current.close()
             }
         }
     }, [connect])
@@ -77,7 +77,10 @@ export function useWebSocket(url: string) {
         if (wsRef.current) {
             wsRef.current.onmessage = (event) => {
                 try {
-                    const message = JSON.parse(event.data)
+                    const message = {
+                        type: "message",
+                        data: JSON.parse(event.data)
+                    }
                     callback(message)
                 } catch (err) {
                     console.error("Error parsing WebSocket message:", err)

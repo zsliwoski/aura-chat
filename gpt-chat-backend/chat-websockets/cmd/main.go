@@ -1,7 +1,9 @@
 package main
 
 import (
+	"chat-websockets/lib/ollama"
 	"chat-websockets/lib/utils"
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -16,6 +18,9 @@ var upgrader = websocket.Upgrader{
 		return true // Allow all connections
 	},
 }
+
+var ollamaURL = "http://" + utils.GetEnv("OLLAMA_HOST", "localhost:11434") + "/api/chat"
+var inferenceModel = utils.GetEnv("INFERENCE_MODEL", "deepseek-r1:1.5b")
 
 func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
@@ -38,9 +43,43 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 
 		// Print received message
 		log.Printf("Received: %s", message)
+		chatRequest := ollama.ChatRequest{
+			Model:  inferenceModel,
+			Stream: false,
+			Messages: []ollama.Message{
+				{
+					Role:    "user",
+					Content: string(message),
+				},
+			},
+		}
+
+		// Send message to LLM
+		resp, err := ollama.PostChatMessage(ollamaURL, chatRequest)
+		if err != nil {
+			log.Printf("Error sending message to Ollama: %v", err)
+			break
+		}
+
+		// Read the response JSON into an object
+		var chatResponse ollama.ChatResponse
+		err = json.NewDecoder(resp.Body).Decode(&chatResponse)
+		if err != nil {
+			log.Printf("Error decoding response: %v", err)
+			break
+		}
+		defer resp.Body.Close()
 
 		// Echo the message back
-		err = conn.WriteMessage(messageType, message)
+		responseBytes, err := json.Marshal(chatResponse)
+		if err != nil {
+			log.Printf("Error marshalling response: %v", err)
+			break
+		}
+
+		log.Printf("Response: %s", responseBytes)
+
+		err = conn.WriteMessage(messageType, responseBytes)
 		if err != nil {
 			log.Printf("Error writing message: %v", err)
 			break
