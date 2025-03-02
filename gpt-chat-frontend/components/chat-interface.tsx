@@ -93,7 +93,7 @@ export default function ChatInterface() {
       if (message.type === "message") {
         // NOTE: temporary workaround to remove <think> tags from response
         // Once streaming is added this will turn into something more useful
-        const content = message.data.message.content.replace(/<think>.*?<\/think>/, '');
+        const content = message.data.message.content.split(/<\/think>/)[1];
         const assistantMessage: Message = {
           id: Date.now().toString(),
           content: content,
@@ -486,7 +486,7 @@ export default function ChatInterface() {
             </Button>
             <div className="flex items-center gap-2">
               <Sparkles className="h-5 w-5 text-primary animate-pulse" />
-              <span className="font-medium text-secondary dark:text-tertiary">ChatAI</span>
+              <span className="font-medium text-secondary dark:text-tertiary">AuraChat</span>
             </div>
           </div>
 
@@ -602,7 +602,7 @@ export default function ChatInterface() {
                   setInput(e.target.value)
                   if (inputError) validateInput(e.target.value)
                 }}
-                placeholder={isConnected ? "Message ChatAI..." : "Connecting to server..."}
+                placeholder={isConnected ? "Message AuraChat..." : "Connecting to server..."}
                 disabled={!isConnected}
                 className={cn(
                   "min-h-[60px] resize-none pr-12 border-tertiary bg-light-bg text-secondary focus:border-primary focus:ring-primary/20 dark:border-secondary/30 dark:bg-dark-bg dark:text-tertiary transition-all duration-200 focus:scale-[1.01]",
@@ -626,7 +626,7 @@ export default function ChatInterface() {
             </div>
             {inputError && <p className="mt-2 text-sm text-destructive">{inputError}</p>}
             <p className="mt-2 text-center text-xs text-secondary/60 dark:text-tertiary/60">
-              ChatAI can make mistakes. Consider checking important information.
+              AuraChat can make mistakes. Consider checking important information.
             </p>
           </form>
         </div>
