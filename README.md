@@ -29,7 +29,8 @@ Whether you’re building a virtual assistant, customer support bot, or any othe
 - [x] Next.js front-end interface.
 
 ### v1.1 - Advanced Features
-- [ ] User authentication and session management.
+- [x] User authentication and session management.
+- [x] Multi-platform support (e.g., mobile, desktop).
 - [ ] NLP tuning for more accurate and contextual responses.
 - [ ] Multi-language support.
 
@@ -38,9 +39,9 @@ Whether you’re building a virtual assistant, customer support bot, or any othe
 - [ ] Integration with external APIs for enhanced functionalities (e.g., weather, news).
 
 ### Future Enhancements
+- [ ] Live demo site
 - [ ] Support for voice-based interactions.
 - [ ] Customizable chatbot personalities.
-- [ ] Multi-platform support (e.g., mobile, desktop).
 
 ## Local Setup
 
