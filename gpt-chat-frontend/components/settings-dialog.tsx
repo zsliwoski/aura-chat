@@ -58,8 +58,8 @@ export function SettingsDialog({ fullname, open, onOpenChange }: SettingsDialogP
 
           <div className="space-y-4">
             <h3 className="text-sm font-medium">Language - Coming soon!</h3>
-            <Select title="Coming Soon!" disabled value={language} onValueChange={setLanguage}>
-              <SelectTrigger className="w-full border-tertiary bg-light-bg text-secondary focus:border-primary focus:ring-primary/20 dark:border-secondary/30 dark:bg-dark-bg dark:text-tertiary">
+            <Select disabled value={language} onValueChange={setLanguage}>
+              <SelectTrigger title="Coming Soon!" className="w-full border-tertiary bg-light-bg text-secondary focus:border-primary focus:ring-primary/20 dark:border-secondary/30 dark:bg-dark-bg dark:text-tertiary">
                 <SelectValue placeholder="Select language" />
               </SelectTrigger>
               <SelectContent className="bg-light-bg dark:bg-dark-bg border-tertiary dark:border-secondary/30">
@@ -81,8 +81,8 @@ export function SettingsDialog({ fullname, open, onOpenChange }: SettingsDialogP
 
           <div className="space-y-4">
             <h3 className="text-sm font-medium">Notifications - Coming soon!</h3>
-            <div className="flex items-center space-x-2">
-              <Switch title="Coming Soon!" disabled id="notifications" checked={notifications} onCheckedChange={setNotifications} />
+            <div title="Coming Soon!" className="flex items-center space-x-2">
+              <Switch disabled id="notifications" checked={notifications} onCheckedChange={setNotifications} />
               <Label htmlFor="notifications">Enable notifications</Label>
             </div>
           </div>
