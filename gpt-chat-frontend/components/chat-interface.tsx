@@ -434,6 +434,7 @@ export default function ChatInterface() {
             <Button
               className="w-full justify-start gap-2 bg-primary text-primary-foreground hover:bg-primary/90 transition-all duration-300 hover:scale-[1.02]"
               onClick={createNewChat}
+              title="Start a new conversation"
             >
               <Plus size={16} />
               New Chat
@@ -457,6 +458,7 @@ export default function ChatInterface() {
               </div>
               <div className="flex gap-1">
                 <Button
+                  title="Settings"
                   variant="ghost"
                   size="icon"
                   onClick={() => setShowSettings(true)}
@@ -465,6 +467,7 @@ export default function ChatInterface() {
                   <Settings size={18} />
                 </Button>
                 <Button
+                  title="Sign Out"
                   variant="ghost"
                   size="icon"
                   className="text-secondary dark:text-tertiary hover:bg-primary/10 transition-all duration-200 hover:scale-105 hover:shadow-lg"
@@ -504,7 +507,7 @@ export default function ChatInterface() {
               size="icon"
               className="text-secondary dark:text-tertiary hover:bg-primary/10 transition-all duration-200"
               onClick={() => exportConversation(messages)}
-              title="Export conversation"
+              title="Export Conversation"
             >
               <Download size={18} />
             </Button>
