@@ -55,39 +55,54 @@ To get started with AuraChat locally, follow the instructions below:
 Steps to run the project locally
 Clone the repository:
 
-bash
-Copy
+```bash
 git clone https://github.com/zsliwoski/gpt-chat-bot.git
 cd gpt-chat-bot
+```
+
+There are two ways to start both the frontend and LLM server
+
+### Fast:
+Create a .env file in the gpt-chat-frontend folder:
+
+Copy the example example.env file or create your own .env file with the necessary environment variables (e.g., API keys, URLs).
+
+Run the local startup bash script
+```bash
+chmod +x ./local_startup.sh
+./local_startup.sh
+```
+Visit http://localhost:3000 to see the development server
+
+### Manual:
 Install front-end dependencies:
 
-bash
-Copy
+```bash
 cd gpt-chat-frontend
 npm install
-Create a .env file in the client folder:
+```
+Create a .env file in the gpt-chat-frontend folder:
 
 Copy the example example.env file or create your own .env file with the necessary environment variables (e.g., API keys, URLs).
 
 Build the Docker container for the backend:
 
-bash
-Copy
+```bash
 cd gpt-chat-backend
-docker build -t gpt-chat-backend .
-
+docker build --progress=plain --no-cache -t gpt-chat-backend:latest .
+```
 Run the Docker container for the backend:
 
-bash
-Copy
+```bash
 docker run -d -p 8080:8080 gpt-chat-backend
-
+```
 Start the Next.js application:
 
-bash
-Copy
+```bash
 cd gpt-chat-frontend
 npm run dev
+```
+
 Visit http://localhost:3000 in your browser to interact with the AI chatbot.
 
 Contributing
