@@ -56,8 +56,8 @@ Steps to run the project locally
 Clone the repository:
 
 ```bash
-git clone https://github.com/zsliwoski/gpt-chat-bot.git
-cd gpt-chat-bot
+git clone https://github.com/zsliwoski/aura-chat.git
+cd aura-chat
 ```
 
 There are two ways to start both the frontend and LLM server
