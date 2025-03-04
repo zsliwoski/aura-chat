@@ -51,33 +51,41 @@ To get started with AuraChat locally, follow the instructions below:
 - Go (for WebSocket server)
 - Docker (optional, for easier setup)
 
-### Steps to run the project locally
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/yourusername/AuraChat.git
-   cd AuraChat
+Steps to run the project locally
+Clone the repository:
+
+bash
+Copy
+git clone https://github.com/zsliwoski/gpt-chat-bot.git
+cd gpt-chat-bot
 Install front-end dependencies:
 
 bash
 Copy
-cd client
+cd gpt-chat-frontend
 npm install
-Install Go dependencies for WebSocket server:
+Create a .env file in the client folder:
+
+Copy the example example.env file or create your own .env file with the necessary environment variables (e.g., API keys, URLs).
+
+Build the Docker container for the backend:
 
 bash
 Copy
-cd server
-go mod tidy
-Run the WebSocket server:
+cd gpt-chat-backend
+docker build -t gpt-chat-backend .
+
+Run the Docker container for the backend:
 
 bash
 Copy
-go run main.go
+docker run -d -p 8080:8080 gpt-chat-backend
+
 Start the Next.js application:
 
 bash
 Copy
-cd client
+cd gpt-chat-frontend
 npm run dev
 Visit http://localhost:3000 in your browser to interact with the AI chatbot.
 
