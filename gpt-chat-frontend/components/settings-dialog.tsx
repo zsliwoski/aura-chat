@@ -12,16 +12,16 @@ import { useTheme } from "@/components/theme-provider"
 import { Check } from "lucide-react"
 
 interface SettingsDialogProps {
+  fullname: string
   open: boolean
   onOpenChange: (open: boolean) => void
 }
 
-export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
+export function SettingsDialog({ fullname, open, onOpenChange }: SettingsDialogProps) {
   const { theme, setTheme } = useTheme()
-  const [notifications, setNotifications] = useState(true)
+  const [notifications, setNotifications] = useState(false)
   const [language, setLanguage] = useState("english")
-  const [name, setName] = useState("John Doe")
-  const [email, setEmail] = useState("john@example.com")
+  const [name, setName] = useState(fullname)
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -30,6 +30,18 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
           <DialogTitle className="text-xl font-semibold">Settings</DialogTitle>
         </DialogHeader>
         <div className="grid gap-6 py-4">
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">Display Name</Label>
+              <Input
+                id="name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="border-tertiary bg-light-bg text-secondary focus:border-primary focus:ring-primary/20 dark:border-secondary/30 dark:bg-dark-bg dark:text-tertiary"
+              />
+            </div>
+          </div>
+
           <div className="space-y-4">
             <h3 className="text-sm font-medium">Theme Preferences</h3>
             <RadioGroup defaultValue={theme} onValueChange={(value) => setTheme(value as "light" | "dark")}>
@@ -45,8 +57,8 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
           </div>
 
           <div className="space-y-4">
-            <h3 className="text-sm font-medium">Language</h3>
-            <Select value={language} onValueChange={setLanguage}>
+            <h3 className="text-sm font-medium">Language - Coming soon!</h3>
+            <Select title="Coming Soon!" disabled value={language} onValueChange={setLanguage}>
               <SelectTrigger className="w-full border-tertiary bg-light-bg text-secondary focus:border-primary focus:ring-primary/20 dark:border-secondary/30 dark:bg-dark-bg dark:text-tertiary">
                 <SelectValue placeholder="Select language" />
               </SelectTrigger>
@@ -68,35 +80,14 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
           </div>
 
           <div className="space-y-4">
-            <h3 className="text-sm font-medium">Notifications</h3>
+            <h3 className="text-sm font-medium">Notifications - Coming soon!</h3>
             <div className="flex items-center space-x-2">
-              <Switch id="notifications" checked={notifications} onCheckedChange={setNotifications} />
+              <Switch title="Coming Soon!" disabled id="notifications" checked={notifications} onCheckedChange={setNotifications} />
               <Label htmlFor="notifications">Enable notifications</Label>
             </div>
           </div>
 
-          <div className="space-y-4">
-            <h3 className="text-sm font-medium">Profile Settings</h3>
-            <div className="space-y-2">
-              <Label htmlFor="name">Display Name</Label>
-              <Input
-                id="name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="border-tertiary bg-light-bg text-secondary focus:border-primary focus:ring-primary/20 dark:border-secondary/30 dark:bg-dark-bg dark:text-tertiary"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="border-tertiary bg-light-bg text-secondary focus:border-primary focus:ring-primary/20 dark:border-secondary/30 dark:bg-dark-bg dark:text-tertiary"
-              />
-            </div>
-          </div>
+
 
           <Button
             onClick={() => onOpenChange(false)}

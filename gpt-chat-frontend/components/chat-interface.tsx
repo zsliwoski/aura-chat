@@ -4,7 +4,7 @@ import type React from "react"
 import { useState, useRef, useEffect, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
-import { Avatar } from "@/components/ui/avatar"
+import { Avatar, AvatarImage } from "@/components/ui/avatar"
 import { Sparkles, Send, Menu, Plus, User, Settings, LogOut, Download, Copy } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { ThemeToggle } from "@/components/theme-toggle"
@@ -20,6 +20,8 @@ import remarkGfm from "remark-gfm"
 import { useTheme } from "next-themes"
 import type { Conversation } from "@/types/chat"
 import { generateConversationTitle, formatDate } from "@/lib/utils"
+import { useSession, signOut } from "next-auth/react"
+import { AvatarFallback } from "@radix-ui/react-avatar"
 
 type Message = {
   id: string
@@ -87,6 +89,8 @@ export default function ChatInterface() {
 
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null)
+
+  const { data: session } = useSession()
 
   useEffect(() => {
     addMessageListener((message) => {
@@ -444,9 +448,12 @@ export default function ChatInterface() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Avatar className="border-2 border-primary transition-all duration-300 hover:scale-110 flex items-center justify-center">
-                  <User size={24} className="text-secondary dark:text-tertiary" />
+                  <AvatarFallback>
+                    <User size={24} className="text-secondary dark:text-tertiary" />
+                  </AvatarFallback>
+                  <AvatarImage src={session?.user?.image ? session?.user?.image : ""} />
                 </Avatar>
-                <span className="text-sm font-medium text-secondary dark:text-tertiary">John Doe</span>
+                <span className="text-sm font-medium text-secondary dark:text-tertiary">{session?.user?.name ? session?.user?.name : session?.user?.email}</span>
               </div>
               <div className="flex gap-1">
                 <Button
@@ -461,6 +468,7 @@ export default function ChatInterface() {
                   variant="ghost"
                   size="icon"
                   className="text-secondary dark:text-tertiary hover:bg-primary/10 transition-all duration-200 hover:scale-105 hover:shadow-lg"
+                  onClick={() => signOut()}
                 >
                   <LogOut size={18} />
                 </Button>
@@ -631,7 +639,7 @@ export default function ChatInterface() {
           </form>
         </div>
       </div>
-      {showSettings && <SettingsDialog open={showSettings} onOpenChange={setShowSettings} />}
+      {showSettings && <SettingsDialog fullname={session?.user?.name ? session?.user?.name : ""} open={showSettings} onOpenChange={setShowSettings} />}
     </div>
   )
 }

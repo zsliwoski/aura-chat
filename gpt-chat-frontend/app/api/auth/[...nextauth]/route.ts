@@ -3,6 +3,10 @@ import GoogleProvider from "next-auth/providers/google"
 import GitHubProvider from "next-auth/providers/github"
 import FacebookProvider from "next-auth/providers/facebook"
 
+import { Prisma } from "@prisma/client";
+import { prisma } from '@/app/lib/db';
+import { PrismaAdapter } from '@auth/prisma-adapter';
+
 export const authOptions = {
     providers: [
         GoogleProvider({
@@ -18,6 +22,7 @@ export const authOptions = {
             clientSecret: process.env.FACEBOOK_SECRET!,
         }),
     ],
+    adapter: PrismaAdapter(prisma),
     pages: {
         signIn: "/login",
     },
