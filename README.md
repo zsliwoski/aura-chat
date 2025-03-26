@@ -105,7 +105,7 @@ npm run dev
 
 Visit http://localhost:3000 in your browser to interact with the AI chatbot.
 
-Contributing
+## Contributing
 We welcome contributions from the community! If you want to contribute to AuraChat, please follow these steps:
 
 Fork the repository.
@@ -113,17 +113,19 @@ Create a new branch (git checkout -b feature-xyz).
 Make your changes and commit them (git commit -am 'Add new feature').
 Push to the branch (git push origin feature-xyz).
 Create a new Pull Request.
-Code of Conduct
+
+## Code of Conduct
 Please adhere to the Code of Conduct while contributing.
 
-Issues
+## Issues
 If you encounter any bugs or have feature requests, please open an issue on the repository’s GitHub page.
 
-License
+## License
 AuraChat is open-source and distributed under the MIT License. See LICENSE for more details.
 
-Acknowledgments
-DeepSeek-R1 LLM model for advanced text prediction.
-Next.js for a robust and efficient front-end framework.
-Go WebSockets for real-time communication.
+## Acknowledgments
+- DeepSeek-R1 LLM model for advanced text prediction.
+- Next.js for a robust and efficient front-end framework.
+- Go WebSockets for real-time communication.
+
 Built with ❤️ by the AuraChat Team
